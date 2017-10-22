@@ -13,7 +13,7 @@ function plugin:access(config)
 	plugin.super.access(self)
 
 	-- Set geolocation headers.
-	header("X-Visitor-Content", ngx.var.geoip2_continent)
+	header("X-Visitor-Continent", ngx.var.geoip2_continent)
 	header("X-Visitor-Country-Name", ngx.var.geoip2_country_name)
 	header("X-Visitor-Country-Code", ngx.var.geoip2_country_code)
 	header("X-Visitor-Registered-Country-Name", ngx.var.geoip2_registered_country_name)
@@ -27,7 +27,7 @@ function plugin:access(config)
 end
 
 -- Set a custom plugin priority.
-plugin.PRIORITY = 2
+plugin.PRIORITY = 750
 
 -- Return the plugin.
 return plugin
