@@ -27,7 +27,7 @@ function plugin:access(config)
 end
 
 -- Set a custom plugin priority.
-plugin.PRIORITY = 750
+plugin.PRIORITY = 799
 
 -- Return the plugin.
 return plugin
