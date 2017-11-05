@@ -44,6 +44,9 @@ function plugin:access(config)
 	body()
 	local base_body = get_body()
 	local content_length = (base_body and #base_body) or 0
+	if content_length <= 0 then
+		return
+	end
 	local parameters = parse_json(base_body)
 
   	-- Append the data to the body.
