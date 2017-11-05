@@ -45,9 +45,6 @@ function plugin:access(config)
 	local base_body = get_body()
 	local content_length = (base_body and #base_body) or 0
 	local parameters = parse_json(base_body)
-	if parameters == nil and content_length > 0 then
-    	return false, nil
-  	end
 
   	-- Append the data to the body.
   	parameters["continent"] = ngx.var.geoip2_continent
