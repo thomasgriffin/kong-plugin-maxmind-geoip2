@@ -5,7 +5,7 @@ local body     = ngx.req.read_body
 local set_body = ngx.req.set_body_data
 local get_body = ngx.req.get_body_data
 local header   = ngx.req.set_header
-local headers  = ngx.req.get_headers()
+local headers  = ngx.req.get_headers
 local pcall    = pcall
 
 -- Function to parse JSON.
