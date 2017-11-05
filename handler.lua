@@ -1,6 +1,18 @@
 -- Load the base plugin and create a subclass.
 local plugin = require("kong.plugins.base_plugin"):extend()
+local cjson  = require "cjson"
 local header = ngx.req.set_header
+local pcall  = pcall
+
+-- Function to parse JSON.
+local function parse_json(body)
+	if body then
+		local status, res = pcall(cjson.decode, body)
+		if status then
+			return res
+		end
+	end
+end
 
 -- Subclass constructor.
 function plugin:new()
@@ -24,6 +36,34 @@ function plugin:access(config)
 	header("X-Visitor-Postal-Code", ngx.var.geoip2_postal_code)
 	header("X-Visitor-Latitude", ngx.var.geoip2_latitude)
 	header("X-Visitor-Longitude", ngx.var.geoip2_longitude)
+
+	-- Prepare to append geolocation data to the request JSON body.
+	req_read_body()
+	local body = req_get_body_data()
+	local removed, renamed, replaced, added, appended = false, false, false, false, false
+	local content_length = (body and #body) or 0
+	local parameters = parse_json(body)
+	if parameters == nil and content_length > 0 then
+    	return false, nil
+  	end
+
+  	-- Append the data to the body.
+  	parameters["continent"] = ngx.var.geoip2_continent
+  	parameters["countryName"] = ngx.var.geoip2_country_name
+  	parameters["countryCode"] = ngx.var.geoip2_country_code
+  	parameters["registeredCountryName"] = ngx.var.geoip2_registered_country_name
+  	parameters["registeredCountryCode"] = ngx.var.geoip2_registered_country_code
+  	parameters["subdivisionName"] = ngx.var.geoip2_subdivision_name
+  	parameters["subdivisionCode"] = ngx.var.geoip2_subdivision_code
+  	parameters["cityName"] = ngx.var.geoip2_city_name
+  	parameters["postalCode"] = ngx.var.geoip2_postal_code
+  	parameters["latitude"] = ngx.var.geoip2_latitude
+  	parameters["longitude"] = ngx.var.geoip2_longitude
+
+  	-- Finally, save the new body data.
+  	local transformed_body = cjson.encode(parameters)
+  	req_set_body_data(transformed_body)
+  	req_set_header(CONTENT_LENGTH, #transformed_body)
 end
 
 -- Set a custom plugin priority.
