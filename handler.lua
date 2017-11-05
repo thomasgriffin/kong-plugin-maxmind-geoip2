@@ -28,7 +28,7 @@ function plugin:access(config)
 	plugin.super.access(self)
 
 	-- Set geolocation headers.
-	if conf.headers then
+	if config.headers then
 		header("X-Visitor-Continent", ngx.var.geoip2_continent)
 		header("X-Visitor-Country-Name", ngx.var.geoip2_country_name)
 		header("X-Visitor-Country-Code", ngx.var.geoip2_country_code)
@@ -43,7 +43,7 @@ function plugin:access(config)
 	end
 
 	-- Prepare to append geolocation data to the request JSON body.
-	if conf.body then
+	if config.body then
 		body()
 		local base_body = get_body()
 		local content_length = (base_body and #base_body) or 0
