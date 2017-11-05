@@ -28,44 +28,48 @@ function plugin:access(config)
 	plugin.super.access(self)
 
 	-- Set geolocation headers.
-	header("X-Visitor-Continent", ngx.var.geoip2_continent)
-	header("X-Visitor-Country-Name", ngx.var.geoip2_country_name)
-	header("X-Visitor-Country-Code", ngx.var.geoip2_country_code)
-	header("X-Visitor-Registered-Country-Name", ngx.var.geoip2_registered_country_name)
-	header("X-Visitor-Registered-Country-Code", ngx.var.geoip2_registered_country_code)
-	header("X-Visitor-Subdivision-Name", ngx.var.geoip2_subdivision_name)
-	header("X-Visitor-Subdivision-Code", ngx.var.geoip2_subdivision_code)
-	header("X-Visitor-City-Name", ngx.var.geoip2_city_name)
-	header("X-Visitor-Postal-Code", ngx.var.geoip2_postal_code)
-	header("X-Visitor-Latitude", ngx.var.geoip2_latitude)
-	header("X-Visitor-Longitude", ngx.var.geoip2_longitude)
+	if conf.headers then
+		header("X-Visitor-Continent", ngx.var.geoip2_continent)
+		header("X-Visitor-Country-Name", ngx.var.geoip2_country_name)
+		header("X-Visitor-Country-Code", ngx.var.geoip2_country_code)
+		header("X-Visitor-Registered-Country-Name", ngx.var.geoip2_registered_country_name)
+		header("X-Visitor-Registered-Country-Code", ngx.var.geoip2_registered_country_code)
+		header("X-Visitor-Subdivision-Name", ngx.var.geoip2_subdivision_name)
+		header("X-Visitor-Subdivision-Code", ngx.var.geoip2_subdivision_code)
+		header("X-Visitor-City-Name", ngx.var.geoip2_city_name)
+		header("X-Visitor-Postal-Code", ngx.var.geoip2_postal_code)
+		header("X-Visitor-Latitude", ngx.var.geoip2_latitude)
+		header("X-Visitor-Longitude", ngx.var.geoip2_longitude)
+	end
 
 	-- Prepare to append geolocation data to the request JSON body.
-	body()
-	local base_body = get_body()
-	local content_length = (base_body and #base_body) or 0
-	if content_length <= 0 then
-		return
+	if conf.body then
+		body()
+		local base_body = get_body()
+		local content_length = (base_body and #base_body) or 0
+		if content_length <= 0 then
+			return
+		end
+
+	  	-- Append the data to the body.
+	  	local parameters  = parse_json(base_body)
+	  	parameters["gct"] = ngx.var.geoip2_continent
+	  	parameters["gcs"] = ngx.var.geoip2_country_name
+	  	parameters["gcc"] = ngx.var.geoip2_country_code
+	  	parameters["grn"] = ngx.var.geoip2_registered_country_name
+	  	parameters["grc"] = ngx.var.geoip2_registered_country_code
+	  	parameters["gsn"] = ngx.var.geoip2_subdivision_name
+	  	parameters["gnc"] = ngx.var.geoip2_subdivision_code
+	  	parameters["gcn"] = ngx.var.geoip2_city_name
+	  	parameters["gpc"] = ngx.var.geoip2_postal_code
+	  	parameters["glt"] = ngx.var.geoip2_latitude
+	  	parameters["gln"] = ngx.var.geoip2_longitude
+
+	  	-- Finally, save the new body data.
+	  	local transformed_body = cjson.encode(parameters)
+	  	set_body(transformed_body)
+	  	header(CONTENT_LENGTH, #transformed_body)
 	end
-	local parameters = parse_json(base_body)
-
-  	-- Append the data to the body.
-  	parameters["continent"] = ngx.var.geoip2_continent
-  	parameters["countryName"] = ngx.var.geoip2_country_name
-  	parameters["countryCode"] = ngx.var.geoip2_country_code
-  	parameters["registeredCountryName"] = ngx.var.geoip2_registered_country_name
-  	parameters["registeredCountryCode"] = ngx.var.geoip2_registered_country_code
-  	parameters["subdivisionName"] = ngx.var.geoip2_subdivision_name
-  	parameters["subdivisionCode"] = ngx.var.geoip2_subdivision_code
-  	parameters["cityName"] = ngx.var.geoip2_city_name
-  	parameters["postalCode"] = ngx.var.geoip2_postal_code
-  	parameters["latitude"] = ngx.var.geoip2_latitude
-  	parameters["longitude"] = ngx.var.geoip2_longitude
-
-  	-- Finally, save the new body data.
-  	local transformed_body = cjson.encode(parameters)
-  	set_body(transformed_body)
-  	header(CONTENT_LENGTH, #transformed_body)
 end
 
 -- Set a custom plugin priority.
