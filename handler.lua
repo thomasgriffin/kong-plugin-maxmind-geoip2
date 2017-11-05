@@ -1,8 +1,11 @@
 -- Load the base plugin and create a subclass.
-local plugin = require("kong.plugins.base_plugin"):extend()
-local cjson  = require "cjson"
-local header = ngx.req.set_header
-local pcall  = pcall
+local plugin   = require("kong.plugins.base_plugin"):extend()
+local cjson    = require "cjson"
+local body     = ngx.req.read_body
+local set_body = ngx.req.set_body_data
+local get_body = ngx.req.get_body_data
+local header   = ngx.req.set_header
+local pcall    = pcall
 
 -- Function to parse JSON.
 local function parse_json(body)
@@ -38,11 +41,10 @@ function plugin:access(config)
 	header("X-Visitor-Longitude", ngx.var.geoip2_longitude)
 
 	-- Prepare to append geolocation data to the request JSON body.
-	req_read_body()
-	local body = req_get_body_data()
-	local removed, renamed, replaced, added, appended = false, false, false, false, false
-	local content_length = (body and #body) or 0
-	local parameters = parse_json(body)
+	body()
+	local base_body = get_body()
+	local content_length = (base_body and #base_body) or 0
+	local parameters = parse_json(base_body)
 	if parameters == nil and content_length > 0 then
     	return false, nil
   	end
@@ -62,8 +64,8 @@ function plugin:access(config)
 
   	-- Finally, save the new body data.
   	local transformed_body = cjson.encode(parameters)
-  	req_set_body_data(transformed_body)
-  	req_set_header(CONTENT_LENGTH, #transformed_body)
+  	set_body(transformed_body)
+  	header(CONTENT_LENGTH, #transformed_body)
 end
 
 -- Set a custom plugin priority.
