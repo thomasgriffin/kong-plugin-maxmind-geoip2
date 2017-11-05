@@ -65,7 +65,7 @@ function plugin:access(config)
 	  	parameters["gpc"] = ngx.var.geoip2_postal_code
 	  	parameters["glt"] = ngx.var.geoip2_latitude
 	  	parameters["gln"] = ngx.var.geoip2_longitude
-	  	parameters["ip"]  = headers["X-Real-Ip"]
+	  	parameters["ip"]  = headers()["X-Real-Ip"]
 
 	  	-- Finally, save the new body data.
 	  	local transformed_body = cjson.encode(parameters)
