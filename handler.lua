@@ -5,7 +5,6 @@ local body     = ngx.req.read_body
 local set_body = ngx.req.set_body_data
 local get_body = ngx.req.get_body_data
 local header   = ngx.req.set_header
-local headers  = ngx.req.get_headers
 local pcall    = pcall
 
 -- Function to parse JSON.
@@ -16,6 +15,12 @@ local function parse_json(body)
 			return res
 		end
 	end
+end
+
+-- Set client IP.
+local client_ip = ngx.var.remote_addr
+if ngx.req.get_headers()['x-forwarded-for'] then
+	client_ip = string.match(ngx.req.get_headers()['x-forwarded-for'], "[^,%s]+")
 end
 
 -- Subclass constructor.
@@ -65,7 +70,7 @@ function plugin:access(config)
 	  	parameters["gpc"] = ngx.var.geoip2_postal_code
 	  	parameters["glt"] = ngx.var.geoip2_latitude
 	  	parameters["gln"] = ngx.var.geoip2_longitude
-	  	parameters["ip"]  = headers()["X-Real-Ip"]
+	  	parameters["ip"]  = client_ip
 
 	  	-- Finally, save the new body data.
 	  	local transformed_body = cjson.encode(parameters)
