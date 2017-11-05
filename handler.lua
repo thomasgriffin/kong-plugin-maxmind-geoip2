@@ -68,7 +68,7 @@ function plugin:access(config)
 	  	-- Finally, save the new body data.
 	  	local transformed_body = cjson.encode(parameters)
 	  	set_body(transformed_body)
-	  	header(CONTENT_LENGTH, #transformed_body)
+	  	header("Content-Length", #transformed_body)
 	end
 end
 
