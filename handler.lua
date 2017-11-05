@@ -17,12 +17,6 @@ local function parse_json(body)
 	end
 end
 
--- Set client IP.
-local client_ip = ngx.var.remote_addr
-if ngx.req.get_headers()['x-forwarded-for'] then
-	client_ip = string.match(ngx.req.get_headers()['x-forwarded-for'], "[^,%s]+")
-end
-
 -- Subclass constructor.
 function plugin:new()
 	plugin.super.new(self, "maxmind-geoip2")
@@ -50,11 +44,18 @@ function plugin:access(config)
 
 	-- Prepare to append geolocation data to the request JSON body.
 	if config.body then
+		-- Prepare body.
 		body()
 		local base_body = get_body()
 		local content_length = (base_body and #base_body) or 0
 		if content_length <= 0 then
 			return
+		end
+
+		-- Set client IP.
+		local client_ip = ngx.var.remote_addr
+		if ngx.req.get_headers()['x-forwarded-for'] then
+			client_ip = string.match(ngx.req.get_headers()['x-forwarded-for'], "[^,%s]+")
 		end
 
 	  	-- Append the data to the body.
