@@ -56,6 +56,8 @@ function plugin:access(config)
 	if config.body then
 		-- Prepare body.
 		local parameters = retrieve_parameters()
+		local encode	 = cjson.encode(data)
+		local data	 	 = csjon.decode(encode)
 
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
@@ -64,18 +66,18 @@ function plugin:access(config)
 		end
 
 	  	-- Append the data to the body.
-	  	parameters["gct"] = ngx.var.geoip2_continent
-	  	parameters["gcs"] = ngx.var.geoip2_country_name
-	  	parameters["gcc"] = ngx.var.geoip2_country_code
-	  	parameters["grn"] = ngx.var.geoip2_registered_country_name
-	  	parameters["grc"] = ngx.var.geoip2_registered_country_code
-	  	parameters["gsn"] = ngx.var.geoip2_subdivision_name
-	  	parameters["gnc"] = ngx.var.geoip2_subdivision_code
-	  	parameters["gcn"] = ngx.var.geoip2_city_name
-	  	parameters["gpc"] = ngx.var.geoip2_postal_code
-	  	parameters["glt"] = ngx.var.geoip2_latitude
-	  	parameters["gln"] = ngx.var.geoip2_longitude
-	  	parameters["ip"]  = client_ip
+	  	data["gct"] = ngx.var.geoip2_continent
+	  	data["gcs"] = ngx.var.geoip2_country_name
+	  	data["gcc"] = ngx.var.geoip2_country_code
+	  	data["grn"] = ngx.var.geoip2_registered_country_name
+	  	data["grc"] = ngx.var.geoip2_registered_country_code
+	  	data["gsn"] = ngx.var.geoip2_subdivision_name
+	  	data["gnc"] = ngx.var.geoip2_subdivision_code
+	  	data["gcn"] = ngx.var.geoip2_city_name
+	  	data["gpc"] = ngx.var.geoip2_postal_code
+	  	data["glt"] = ngx.var.geoip2_latitude
+	  	data["gln"] = ngx.var.geoip2_longitude
+	  	data["ip"]  = client_ip
 
 	  	-- Finally, save the new body data.
 	  	local transformed_body = cjson.encode(parameters)
