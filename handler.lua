@@ -81,6 +81,8 @@ function plugin:access(config)
 
 	  	-- Finally, save the new body data.
 	  	local transformed_body = cjson.encode(data)
+	  	ngx.say(transformed_body)
+	  	ngx.exit(200)
 	  	set_body(transformed_body)
 	  	header("Content-Type", "application/json; charset=utf-8")
 	  	header("Content-Length", #transformed_body)
