@@ -59,9 +59,6 @@ function plugin:access(config)
 		local encode	 = cjson.encode(parameters)
 		local data	 	 = cjson.decode(encode)
 
-		ngx.say(encode)
-		ngx.exit(200)
-
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
 		if ngx.req.get_headers()['x-forwarded-for'] then
@@ -83,7 +80,7 @@ function plugin:access(config)
 	  	data["ip"]  = client_ip
 
 	  	-- Finally, save the new body data.
-	  	local transformed_body = cjson.encode(parameters)
+	  	local transformed_body = cjson.encode(data)
 	  	set_body(transformed_body)
 	  	header("Content-Length", #transformed_body)
 	end
