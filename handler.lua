@@ -7,13 +7,12 @@ local body      = ngx.req.read_body
 local set_body  = ngx.req.set_body_data
 local get_body  = ngx.req.get_body_data
 local header    = ngx.req.set_header
-local pcall     = pcall
 
 -- Function to grab the body params.
 local function retrieve_parameters()
 	body()
 	local body_parameters, err
-	local content_type = ngx.req.get_headers()[CONTENT_TYPE]
+	local content_type = ngx.req.get_headers()["Content-Type"]
 	if content_type and string.find(content_type:lower(), "multipart/form-data", nil, true) then
 		body_parameters = multipart(get_body(), content_type):get_all()
 	elseif content_type and string.find(content_type:lower(), "application/json", nil, true) then
@@ -26,16 +25,6 @@ local function retrieve_parameters()
 	end
 
 	return utils.table_merge(ngx.req.get_uri_args(), body_parameters)
-end
-
--- Function to parse JSON.
-local function parse_json(body)
-	if body then
-		local status, res = pcall(cjson.decode, body)
-		if status then
-			return res
-		end
-	end
 end
 
 -- Subclass constructor.
