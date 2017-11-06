@@ -1,30 +1,21 @@
 -- Load the base plugin and create a subclass.
-local plugin    = require("kong.plugins.base_plugin"):extend()
-local cjson     = require "cjson"
-local multipart = require "multipart"
-local utils 	= require "kong.tools.utils"
-local body      = ngx.req.read_body
-local set_body  = ngx.req.set_body_data
-local get_body  = ngx.req.get_body_data
-local header    = ngx.req.set_header
+local plugin   = require("kong.plugins.base_plugin"):extend()
+local cjson    = require "cjson"
+local body     = ngx.req.read_body
+local set_body = ngx.req.set_body_data
+local get_body = ngx.req.get_body_data
+local header   = ngx.req.set_header
+local headers  = ngx.req.get_headers()
+local pcall    = pcall
 
--- Function to grab the body params.
-local function retrieve_parameters()
-	body()
-	local body_parameters, err
-	local content_type = ngx.req.get_headers()["Content-Type"]
-	if content_type and string.find(content_type:lower(), "multipart/form-data", nil, true) then
-		body_parameters = multipart(get_body(), content_type):get_all()
-	elseif content_type and string.find(content_type:lower(), "application/json", nil, true) then
-		body_parameters, err = cjson.decode(get_body())
-		if err then
-			body_parameters = {}
+-- Function to parse JSON.
+local function parse_json(body)
+	if body then
+		local status, res = pcall(cjson.decode, body)
+		if status then
+			return res
 		end
-	else
-		body_parameters = ngx.req.get_post_args()
 	end
-
-	return utils.table_merge(ngx.req.get_uri_args(), body_parameters)
 end
 
 -- Subclass constructor.
@@ -55,9 +46,12 @@ function plugin:access(config)
 	-- Prepare to append geolocation data to the request JSON body.
 	if config.body then
 		-- Prepare body.
-		local parameters = retrieve_parameters()
-		local encode	 = cjson.encode(parameters)
-		local data	 	 = cjson.decode(encode)
+		body()
+		local base_body = get_body()
+		local content_length = (base_body and #base_body) or 0
+		if content_length <= 0 then
+			return
+		end
 
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
@@ -66,25 +60,23 @@ function plugin:access(config)
 		end
 
 	  	-- Append the data to the body.
-	  	data["gct"] = ngx.var.geoip2_continent
-	  	data["gcs"] = ngx.var.geoip2_country_name
-	  	data["gcc"] = ngx.var.geoip2_country_code
-	  	data["grn"] = ngx.var.geoip2_registered_country_name
-	  	data["grc"] = ngx.var.geoip2_registered_country_code
-	  	data["gsn"] = ngx.var.geoip2_subdivision_name
-	  	data["gnc"] = ngx.var.geoip2_subdivision_code
-	  	data["gcn"] = ngx.var.geoip2_city_name
-	  	data["gpc"] = ngx.var.geoip2_postal_code
-	  	data["glt"] = ngx.var.geoip2_latitude
-	  	data["gln"] = ngx.var.geoip2_longitude
-	  	data["ip"]  = client_ip
+	  	local parameters  = parse_json(base_body)
+	  	parameters["gct"] = ngx.var.geoip2_continent
+	  	parameters["gcs"] = ngx.var.geoip2_country_name
+	  	parameters["gcc"] = ngx.var.geoip2_country_code
+	  	parameters["grn"] = ngx.var.geoip2_registered_country_name
+	  	parameters["grc"] = ngx.var.geoip2_registered_country_code
+	  	parameters["gsn"] = ngx.var.geoip2_subdivision_name
+	  	parameters["gnc"] = ngx.var.geoip2_subdivision_code
+	  	parameters["gcn"] = ngx.var.geoip2_city_name
+	  	parameters["gpc"] = ngx.var.geoip2_postal_code
+	  	parameters["glt"] = ngx.var.geoip2_latitude
+	  	parameters["gln"] = ngx.var.geoip2_longitude
+	  	parameters["ip"]  = client_ip
 
 	  	-- Finally, save the new body data.
-	  	local transformed_body = cjson.encode(data)
-	  	ngx.say(transformed_body)
-	  	ngx.exit(200)
+	  	local transformed_body = cjson.encode(parameters)
 	  	set_body(transformed_body)
-	  	header("Content-Type", "application/json; charset=utf-8")
 	  	header("Content-Length", #transformed_body)
 	end
 end
