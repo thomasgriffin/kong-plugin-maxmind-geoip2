@@ -36,7 +36,6 @@ end
 function plugin:access(config)
 	-- Make sure the base plugin also runs the access function.
 	plugin.super.access(self)
-	return
 
 	-- Set geolocation headers.
 	if config.headers then
@@ -86,7 +85,7 @@ function plugin:access(config)
 end
 
 -- Set a custom plugin priority.
-plugin.PRIORITY = 799
+plugin.PRIORITY = 400
 
 -- Return the plugin.
 return plugin
