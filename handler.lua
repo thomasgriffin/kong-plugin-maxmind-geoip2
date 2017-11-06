@@ -57,7 +57,7 @@ function plugin:access(config)
 		-- Prepare body.
 		local parameters = retrieve_parameters()
 		local encode	 = cjson.encode(data)
-		local data	 	 = csjon.decode(encode)
+		local data	 	 = cjson.decode(encode)
 
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
