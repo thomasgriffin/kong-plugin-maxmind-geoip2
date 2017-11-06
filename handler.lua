@@ -36,6 +36,7 @@ end
 function plugin:access(config)
 	-- Make sure the base plugin also runs the access function.
 	plugin.super.access(self)
+	return
 
 	-- Set geolocation headers.
 	if config.headers then
