@@ -59,7 +59,7 @@ function plugin:access(config)
 		local encode	 = cjson.encode(parameters)
 		local data	 	 = cjson.decode(encode)
 
-		ngx.say(encode)
+		ngx.print(data)
 		ngx.exit(200)
 
 		-- Set client IP.
