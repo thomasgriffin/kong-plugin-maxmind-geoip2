@@ -56,7 +56,7 @@ function plugin:access(config)
 	if config.body then
 		-- Prepare body.
 		local parameters = retrieve_parameters()
-		local encode	 = cjson.encode(data)
+		local encode	 = cjson.encode(parameters)
 		local data	 	 = cjson.decode(encode)
 
 		-- Set client IP.
