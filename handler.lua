@@ -37,55 +37,11 @@ function plugin:access(config)
 	-- Make sure the base plugin also runs the access function.
 	plugin.super.access(self)
 
-	-- Set geolocation headers.
-	if config.headers then
-		header("X-Visitor-Continent", ngx.var.geoip2_continent)
-		header("X-Visitor-Country-Name", ngx.var.geoip2_country_name)
-		header("X-Visitor-Country-Code", ngx.var.geoip2_country_code)
-		header("X-Visitor-Registered-Country-Name", ngx.var.geoip2_registered_country_name)
-		header("X-Visitor-Registered-Country-Code", ngx.var.geoip2_registered_country_code)
-		header("X-Visitor-Subdivision-Name", ngx.var.geoip2_subdivision_name)
-		header("X-Visitor-Subdivision-Code", ngx.var.geoip2_subdivision_code)
-		header("X-Visitor-City-Name", ngx.var.geoip2_city_name)
-		header("X-Visitor-Postal-Code", ngx.var.geoip2_postal_code)
-		header("X-Visitor-Latitude", ngx.var.geoip2_latitude)
-		header("X-Visitor-Longitude", ngx.var.geoip2_longitude)
-	end
 
-	-- Prepare to append geolocation data to the request JSON body.
-	if config.body then
-		-- Prepare body.
-		local parameters = retrieve_parameters()
-
-		-- Set client IP.
-		local client_ip = ngx.var.remote_addr
-		if ngx.req.get_headers()['x-forwarded-for'] then
-			client_ip = string.match(ngx.req.get_headers()['x-forwarded-for'], "[^,%s]+")
-		end
-
-	  	-- Append the data to the body.
-	  	parameters["gct"] = ngx.var.geoip2_continent
-	  	parameters["gcs"] = ngx.var.geoip2_country_name
-	  	parameters["gcc"] = ngx.var.geoip2_country_code
-	  	parameters["grn"] = ngx.var.geoip2_registered_country_name
-	  	parameters["grc"] = ngx.var.geoip2_registered_country_code
-	  	parameters["gsn"] = ngx.var.geoip2_subdivision_name
-	  	parameters["gnc"] = ngx.var.geoip2_subdivision_code
-	  	parameters["gcn"] = ngx.var.geoip2_city_name
-	  	parameters["gpc"] = ngx.var.geoip2_postal_code
-	  	parameters["glt"] = ngx.var.geoip2_latitude
-	  	parameters["gln"] = ngx.var.geoip2_longitude
-	  	parameters["ip"]  = client_ip
-
-	  	-- Finally, save the new body data.
-	  	local transformed_body = cjson.encode(parameters)
-	  	set_body(transformed_body)
-	  	header("Content-Length", #transformed_body)
-	end
 end
 
 -- Set a custom plugin priority.
-plugin.PRIORITY = 400
+plugin.PRIORITY = 799
 
 -- Return the plugin.
 return plugin
