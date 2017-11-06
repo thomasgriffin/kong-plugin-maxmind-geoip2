@@ -59,6 +59,9 @@ function plugin:access(config)
 		local encode	 = cjson.encode(parameters)
 		local data	 	 = cjson.decode(encode)
 
+		ngx.say(encode)
+		ngx.exit(200)
+
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
 		if ngx.req.get_headers()['x-forwarded-for'] then
