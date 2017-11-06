@@ -1,11 +1,32 @@
 -- Load the base plugin and create a subclass.
-local plugin   = require("kong.plugins.base_plugin"):extend()
-local cjson    = require "cjson"
-local body     = ngx.req.read_body
-local set_body = ngx.req.set_body_data
-local get_body = ngx.req.get_body_data
-local header   = ngx.req.set_header
-local pcall    = pcall
+local plugin    = require("kong.plugins.base_plugin"):extend()
+local cjson     = require "cjson"
+local multipart = require "multipart"
+local utils 	= require "kong.tools.utils"
+local body      = ngx.req.read_body
+local set_body  = ngx.req.set_body_data
+local get_body  = ngx.req.get_body_data
+local header    = ngx.req.set_header
+local pcall     = pcall
+
+-- Function to grab the body params.
+local function retrieve_parameters()
+	body()
+	local body_parameters, err
+	local content_type = ngx.req.get_headers()[CONTENT_TYPE]
+	if content_type and string.find(content_type:lower(), "multipart/form-data", nil, true) then
+		body_parameters = multipart(get_body(), content_type):get_all()
+	elseif content_type and string.find(content_type:lower(), "application/json", nil, true) then
+		body_parameters, err = cjson.decode(get_body())
+		if err then
+			body_parameters = {}
+		end
+	else
+		body_parameters = ngx.req.get_post_args()
+	end
+
+	return utils.table_merge(ngx.req.get_uri_args(), body_parameters)
+end
 
 -- Function to parse JSON.
 local function parse_json(body)
@@ -45,12 +66,7 @@ function plugin:access(config)
 	-- Prepare to append geolocation data to the request JSON body.
 	if config.body then
 		-- Prepare body.
-		body()
-		local base_body = get_body()
-		local content_length = (base_body and #base_body) or 0
-		if content_length <= 0 then
-			return
-		end
+		local parameters = retrieve_parameters()
 
 		-- Set client IP.
 		local client_ip = ngx.var.remote_addr
@@ -59,7 +75,6 @@ function plugin:access(config)
 		end
 
 	  	-- Append the data to the body.
-	  	local parameters  = parse_json(base_body)
 	  	parameters["gct"] = ngx.var.geoip2_continent
 	  	parameters["gcs"] = ngx.var.geoip2_country_name
 	  	parameters["gcc"] = ngx.var.geoip2_country_code
